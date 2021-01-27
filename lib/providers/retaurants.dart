@@ -54,8 +54,16 @@ class Restaurants with ChangeNotifier {
     },
   ];
 
-  List<Restaurant> restaurants = [];
-  List<String> categories = [];
+  List<Restaurant> _restaurants = [];
+  List<String> _categories = [];
+
+  List<Restaurant> get restaurants {
+    return [..._restaurants];
+  }
+
+  List<String> get categories {
+    return [..._categories];
+  }
 
   Future<void> fetchRestaurants() async {
     await Future.delayed(Duration(seconds: 1)).then((value) {
@@ -76,8 +84,8 @@ class Restaurants with ChangeNotifier {
 
         loadedCategories.add(restaurant['category']);
       });
-      restaurants = loadedRestaurants;
-      categories = loadedCategories;
+      _restaurants = loadedRestaurants;
+      _categories = loadedCategories;
     });
   }
 }

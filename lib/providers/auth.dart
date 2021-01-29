@@ -45,14 +45,15 @@ class Auth with ChangeNotifier {
 
   Future<bool> tryAutoLogin() async {
     final prefs = await SharedPreferences.getInstance();
-    if (!prefs.containsKey('userData')) {
-      isAuth = false;
-      return false;
-    }
-    print('true');
-    isAuth = true;
-    notifyListeners();
-    return true;
+    await Future.delayed(Duration(seconds: 2)).then((value) {
+      if (!prefs.containsKey('userData')) {
+        isAuth = false;
+        return false;
+      }
+      isAuth = true;
+      notifyListeners();
+      return true;
+    });
   }
 
   Future<void> logout() async {

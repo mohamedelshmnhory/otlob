@@ -22,9 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     _formKey.currentState.save();
-    setState(() {
-      _isLoading = true;
-    });
     try {
       await Provider.of<Auth>(context, listen: false).login(
         _authData['email'],
@@ -33,9 +30,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (error) {
       print(error);
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
@@ -44,91 +38,89 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: Directionality(
         textDirection: TextDirection.rtl,
-        child: _isLoading
-            ? Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 65,
+                ),
+                Center(
+                  child: Image.asset(
+                    'assets/Group 119.png',
+                    height: 234,
+                    width: 148,
+                  ),
+                ),
+                SizedBox(height: 42),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0, left: 16),
                   child: Column(
                     children: [
-                      SizedBox(
-                        height: 65,
-                      ),
-                      Center(
-                        child: Image.asset(
-                          'assets/Group 119.png',
-                          height: 234,
-                          width: 148,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'تسجيل الدخول',
+                            style: TextStyle(
+                                color: Color(0xff46200B), fontSize: 25),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 42),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16.0, left: 16),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  'تسجيل الدخول',
-                                  style: TextStyle(
-                                      color: Color(0xff46200B), fontSize: 25),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 42),
-                            TextFormField(
-                              decoration: loginTextFieldDecoration,
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value.isEmpty || value.length < 10) {
-                                  return 'Invalid email!';
-                                } else {
-                                  return null;
-                                }
-                              },
-                              onSaved: (value) {
-                                _authData['email'] = value;
-                              },
-                            ),
-                            SizedBox(height: 20),
-                            TextFormField(
-                              decoration: passTextFieldDecoration,
-                              obscureText: true,
-                              validator: (value) {
-                                if (value.isEmpty || value.length < 5) {
-                                  return "Password is too short!";
-                                } else {
-                                  return null;
-                                }
-                              },
-                              onSaved: (value) {
-                                _authData['password'] = value;
-                              },
-                            ),
-                          ],
-                        ),
+                      TextFormField(
+                        decoration: loginTextFieldDecoration,
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value.isEmpty || value.length < 10) {
+                            return 'Invalid email!';
+                          } else {
+                            return null;
+                          }
+                        },
+                        onSaved: (value) {
+                          _authData['email'] = value;
+                        },
                       ),
-                      SizedBox(height: 40),
-                      RaisedButton(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                        color: Color(0xffAEC632),
-                        child: Text(
-                          'دخول',
-                          style: TextStyle(color: Colors.white, fontSize: 22),
-                        ),
-                        onPressed: _submit,
-                        padding: EdgeInsets.only(
-                          right: 30,
-                          left: 30,
-                          top: 10,
-                          bottom: 10,
-                        ),
+                      SizedBox(height: 20),
+                      TextFormField(
+                        decoration: passTextFieldDecoration,
+                        obscureText: true,
+                        validator: (value) {
+                          if (value.isEmpty || value.length < 5) {
+                            return "Password is too short!";
+                          } else {
+                            return null;
+                          }
+                        },
+                        onSaved: (value) {
+                          _authData['password'] = value;
+                        },
                       ),
                     ],
                   ),
                 ),
-              ),
+                SizedBox(height: 40),
+                RaisedButton(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  color: Color(0xffAEC632),
+                  child: Text(
+                    'دخول',
+                    style: TextStyle(color: Colors.white, fontSize: 22),
+                  ),
+                  onPressed: _submit,
+                  padding: EdgeInsets.only(
+                    right: 30,
+                    left: 30,
+                    top: 10,
+                    bottom: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

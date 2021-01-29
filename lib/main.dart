@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:otlob/providers/auth.dart';
 import 'package:otlob/providers/retaurants.dart';
 import 'package:otlob/screens/home.dart';
+import 'package:otlob/screens/login_screen.dart';
+import 'package:otlob/screens/splash.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -15,14 +18,28 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => Restaurants(),
         ),
-      ],
-      child: MaterialApp(
-        title: 'Otlob',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          fontFamily: 'Tajawal',
+        ChangeNotifierProvider.value(
+          value: Auth(),
         ),
-        home: Home(),
+      ],
+      child: Consumer<Auth>(
+        builder: (ctx, auth, _) => MaterialApp(
+          title: 'Otlob',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            fontFamily: 'Tajawal',
+          ),
+          home: auth.isAuth
+              ? Home()
+              : FutureBuilder(
+                  future: auth.tryAutoLogin(),
+                  builder: (ctx, authResultSnapshot) =>
+                      authResultSnapshot.connectionState ==
+                              ConnectionState.waiting
+                          ? Splash()
+                          : LoginScreen(),
+                ),
+        ),
       ),
     );
   }

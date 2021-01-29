@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:otlob/models/category.dart';
 import 'package:otlob/models/restaurant.dart';
 import 'package:otlob/providers/retaurants.dart';
 import 'package:otlob/screens/restaurant_details.dart';
@@ -16,12 +17,13 @@ class _HomeState extends State<Home> {
   TextEditingController _editingController = TextEditingController();
   bool _isInit = true;
   bool _isLoading = false;
+  bool _loadingCate = false;
   bool _showSearch = false;
   String filter = '';
   int length = 0;
   var _items = List();
   List<Restaurant> _restaurants = [];
-  List<String> _categories = [];
+  List<Category> _categories = [];
 
   @override
   void dispose() {
@@ -35,15 +37,23 @@ class _HomeState extends State<Home> {
       setState(() {
         _isLoading = true;
       });
-      await Provider.of<Restaurants>(context, listen: false)
-          .fetchRestaurants()
-          .then((_) {
-        _restaurants =
-            Provider.of<Restaurants>(context, listen: false).restaurants;
-        _categories =
-            Provider.of<Restaurants>(context, listen: false).categories;
-        setState(() {
-          _isLoading = false;
+      await Provider.of<Restaurants>(context)
+          .checkLocationServicesInDevice()
+          .then((value) async {
+        await Provider.of<Restaurants>(context, listen: false)
+            .fetchCategories()
+            .then((_) {
+          _categories =
+              Provider.of<Restaurants>(context, listen: false).categories;
+        });
+        await Provider.of<Restaurants>(context, listen: false)
+            .fetchRestaurants()
+            .then((_) {
+          _restaurants =
+              Provider.of<Restaurants>(context, listen: false).restaurants;
+          setState(() {
+            _isLoading = false;
+          });
         });
       });
     }
@@ -55,50 +65,14 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    filterSearch(String query) {
-      print(_items.length);
-      List<Restaurant> searchList = List<Restaurant>();
-      var initList =
-          Provider.of<Restaurants>(context, listen: false).restaurants;
-      // .where((prod) => prod.category == categoryTitle)
-      // .toList();
-      // var showItemList = Provider.of<Products>(context, listen: false).items;
-      searchList.addAll(initList);
-      if (query.isNotEmpty) {
-        List<Restaurant> resultListData = List<Restaurant>();
-        searchList.forEach((item) {
-          if (item.title.toLowerCase().contains(query.toLowerCase())) {
-            resultListData.add(item);
-          }
-        });
-        setState(() {
-          _items.clear();
-          _items.addAll(resultListData);
-        });
-        return;
-      } else {
-        setState(() {
-          _items.clear();
-          _items.addAll(initList);
-        });
-      }
-    }
-
-    if (filter == '') {
-      {
-        _items = _restaurants;
-      }
-    } else {
-      _items =
-          _restaurants.where((element) => element.category == filter).toList();
-    }
+    _items = _restaurants;
     Size size = MediaQuery.of(context).size;
     return Scaffold(
       key: _drawerKey,
       endDrawer: AppDrawer(),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: SingleChildScrollView(
+      body: SingleChildScrollView(
+        child: Directionality(
+          textDirection: TextDirection.rtl,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -212,6 +186,28 @@ class _HomeState extends State<Home> {
                                 child: OutlineButton(
                                   padding: EdgeInsets.zero,
                                   onPressed: () {
+                                    if (_editingController.text.isNotEmpty) {
+                                      setState(() {
+                                        _showSearch = false;
+                                      });
+                                      filterSearch('');
+                                      _editingController.clear();
+                                    }
+                                    setState(() {
+                                      _loadingCate = true;
+                                    });
+                                    Provider.of<Restaurants>(context,
+                                            listen: false)
+                                        .fetchRestaurants()
+                                        .then((value) {
+                                      setState(() {
+                                        _restaurants = Provider.of<Restaurants>(
+                                                context,
+                                                listen: false)
+                                            .restaurants;
+                                        _loadingCate = false;
+                                      });
+                                    });
                                     setState(() {
                                       filter = '';
                                     });
@@ -223,7 +219,7 @@ class _HomeState extends State<Home> {
                                             : Colors.transparent,
                                         borderRadius:
                                             BorderRadius.circular(15)),
-                                    height: size.height * .05,
+                                    height: size.height * .06,
                                     width: size.width * .3,
                                     child: Center(
                                       child: Text(
@@ -254,27 +250,53 @@ class _HomeState extends State<Home> {
                                         child: OutlineButton(
                                           padding: EdgeInsets.zero,
                                           onPressed: () {
+                                            if (_editingController
+                                                .text.isNotEmpty) {
+                                              setState(() {
+                                                _showSearch = false;
+                                              });
+                                              filterSearch('');
+                                              _editingController.clear();
+                                            }
                                             setState(() {
-                                              filter = _categories[i];
+                                              _loadingCate = true;
+                                            });
+                                            Provider.of<Restaurants>(context,
+                                                    listen: false)
+                                                .fetchRestaurants(
+                                                    true, _categories[i].id)
+                                                .then((value) {
+                                              setState(() {
+                                                _loadingCate = false;
+                                                _restaurants =
+                                                    Provider.of<Restaurants>(
+                                                            context,
+                                                            listen: false)
+                                                        .restaurants;
+                                              });
+                                            });
+                                            setState(() {
+                                              filter = _categories[i].name;
                                             });
                                           },
                                           child: Container(
                                             decoration: BoxDecoration(
-                                                color: _categories[i] == filter
+                                                color: _categories[i].name ==
+                                                        filter
                                                     ? Color(0xffEF2823)
                                                     : Colors.transparent,
                                                 borderRadius:
                                                     BorderRadius.circular(15)),
-                                            height: size.height * .05,
+                                            height: size.height * .06,
                                             width: size.width * .3,
                                             child: Center(
                                               child: Text(
-                                                _categories[i],
+                                                _categories[i].name,
                                                 style: TextStyle(
-                                                  color:
-                                                      _categories[i] == filter
-                                                          ? Colors.white
-                                                          : Color(0xffEF2823),
+                                                  color: _categories[i].name ==
+                                                          filter
+                                                      ? Colors.white
+                                                      : Color(0xffEF2823),
                                                 ),
                                               ),
                                             ),
@@ -292,106 +314,144 @@ class _HomeState extends State<Home> {
                             ],
                           ),
                         ),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: _items.length,
-                          itemBuilder: (ctx, i) {
-                            return GestureDetector(
-                              onTap: () {
-                                pageTurn(RestaurantDetails(_items[i]), context);
-                              },
-                              child: Container(
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          margin: EdgeInsets.all(8),
-                                          height: 108.16,
-                                          width: 119.39,
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(30),
-                                              image: DecorationImage(
-                                                  image: NetworkImage(
-                                                      _items[i].photoUrl),
-                                                  fit: BoxFit.cover)),
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                        Container(
+                          height: size.height * .643,
+                          child: _loadingCate
+                              ? Center(child: CircularProgressIndicator())
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: _items.length,
+                                  itemBuilder: (ctx, i) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        pageTurn(RestaurantDetails(_items[i]),
+                                            context);
+                                      },
+                                      child: Container(
+                                        child: Column(
                                           children: [
-                                            Text(
-                                              _items[i].title,
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 20,
-                                                  color: Colors.black),
-                                            ),
-                                            Container(
-                                              height: size.height * .05,
-                                              width: size.width * .4,
-                                              child: ListView.builder(
-                                                  scrollDirection:
-                                                      Axis.horizontal,
-                                                  itemCount:
-                                                      _items[i].rate.round(),
-                                                  itemBuilder: (ctx, i) => Icon(
-                                                        Icons.star,
-                                                        color: Colors.yellow,
-                                                      )),
-                                            ),
-                                            Text(
-                                              _items[i].description,
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                  fontSize: 12,
-                                                  color: Color(0xff787878)),
-                                            ),
                                             Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
                                               children: [
-                                                Icon(Icons.location_on,
-                                                    color: Color(0xff787878)),
-                                                Text(
-                                                  '${_items[i].address}  - ${_items[i].distance} ك.م ',
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                      fontSize: 12,
-                                                      color: Color(0xff787878)),
+                                                Container(
+                                                  margin: EdgeInsets.all(8),
+                                                  height: 108.16,
+                                                  width: 119.39,
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              30),
+                                                      image: DecorationImage(
+                                                          image: NetworkImage(
+                                                              _items[i]
+                                                                  .photoUrl),
+                                                          fit: BoxFit.cover)),
+                                                ),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      _items[i]?.title,
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 20,
+                                                          color: Colors.black),
+                                                    ),
+                                                    Container(
+                                                      height: size.height * .05,
+                                                      width: size.width * .4,
+                                                      child: ListView.builder(
+                                                          scrollDirection:
+                                                              Axis.horizontal,
+                                                          itemCount: _items[i]
+                                                              ?.rate
+                                                              ?.round(),
+                                                          itemBuilder:
+                                                              (ctx, i) => Icon(
+                                                                    Icons.star,
+                                                                    color: Colors
+                                                                        .yellow,
+                                                                  )),
+                                                    ),
+                                                    Text(
+                                                      _items[i]?.description,
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.normal,
+                                                          fontSize: 12,
+                                                          color: Color(
+                                                              0xff787878)),
+                                                    ),
+                                                    Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Icon(Icons.location_on,
+                                                            color: Color(
+                                                                0xff787878)),
+                                                        Row(
+                                                          children: [
+                                                            Text(
+                                                              _items[i]
+                                                                  ?.address,
+                                                              style: TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .normal,
+                                                                  fontSize: 12,
+                                                                  color: Color(
+                                                                      0xff787878)),
+                                                            ),
+                                                            Text(
+                                                              '- ${_items[i]?.distance} ك.م',
+                                                              style: TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .normal,
+                                                                  fontSize: 12,
+                                                                  color: Colors
+                                                                      .black),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        Icon(
+                                                            Icons
+                                                                .directions_car_sharp,
+                                                            color: Color(
+                                                                0xff787878)),
+                                                        Text(
+                                                          _items[i]?.status,
+                                                          style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .normal,
+                                                              fontSize: 12,
+                                                              color: Color(
+                                                                  0xff787878)),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
-                                            Row(
-                                              children: [
-                                                Icon(Icons.directions_car_sharp,
-                                                    color: Color(0xff787878)),
-                                                Text(
-                                                  _items[i].status,
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.normal,
-                                                      fontSize: 12,
-                                                      color: Color(0xff787878)),
-                                                ),
-                                              ],
+                                            Divider(
+                                              thickness: .5,
+                                              indent: 20,
+                                              endIndent: 20,
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
-                                    Divider(
-                                      thickness: .5,
-                                      indent: 20,
-                                      endIndent: 20,
-                                    ),
-                                  ],
+                                      ),
+                                    );
+                                  },
                                 ),
-                              ),
-                            );
-                          },
                         )
                       ],
                     ),
@@ -400,5 +460,30 @@ class _HomeState extends State<Home> {
         ),
       ),
     );
+  }
+
+  filterSearch(String query) {
+    List<Restaurant> searchList = List<Restaurant>();
+    var initList = List<Restaurant>();
+    initList = Provider.of<Restaurants>(context, listen: false).restaurants;
+    searchList.addAll(initList);
+    if (query.isNotEmpty) {
+      List<Restaurant> resultListData = List<Restaurant>();
+      searchList.forEach((item) {
+        if (item.title.toLowerCase().contains(query.toLowerCase())) {
+          resultListData.add(item);
+        }
+      });
+      setState(() {
+        _items.clear();
+        _items.addAll(resultListData);
+      });
+      return;
+    } else {
+      setState(() {
+        _items.clear();
+        _items.addAll(initList);
+      });
+    }
   }
 }

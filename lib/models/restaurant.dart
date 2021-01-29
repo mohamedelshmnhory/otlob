@@ -1,16 +1,20 @@
 class Restaurant {
-  final String title;
-  final String category;
-  final String description;
-  final String address;
-  final String photoUrl;
-  final String status;
-  final double distance;
-  final double rate;
-  final List meals;
+  final id;
+  final title;
+  final category;
+  final description;
+  var address;
+  final photoUrl;
+  final status;
+  final distance;
+  final lat;
+  final long;
+  final rate;
+  final meals;
 
   Restaurant(
-      {this.title,
+      {this.id,
+      this.title,
       this.category,
       this.description,
       this.address,
@@ -18,5 +22,7 @@ class Restaurant {
       this.status,
       this.distance,
       this.rate,
-      this.meals});
+      this.meals,
+      this.lat,
+      this.long});
 }

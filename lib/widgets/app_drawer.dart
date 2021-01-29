@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:otlob/providers/auth.dart';
+import 'package:provider/provider.dart';
 
 class AppDrawer extends StatelessWidget {
   @override
@@ -16,7 +18,10 @@ class AppDrawer extends StatelessWidget {
             child: Align(
               alignment: Alignment.bottomCenter,
               child: FlatButton(
-                onPressed: () async {},
+                onPressed: () async {
+                  Provider.of<Auth>(context, listen: false).logout();
+                  // pageTurn(LoginScreen(), context);
+                },
                 child: Text(
                   'تسجيل الخروج',
                   style: TextStyle(fontWeight: FontWeight.bold),
